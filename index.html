@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>营养师自媒体助手</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap');
+
+  :root {
+    --green-deep: #2D6A4F;
+    --green-mid: #40916C;
+    --green-light: #74C69D;
+    --green-pale: #B7E4C7;
+    --green-mist: #D8F3DC;
+    --green-frost: #F0FAF2;
+    --cream: #FAFDF8;
+    --text-dark: #1B3A2D;
+    --text-mid: #3D6B52;
+    --text-light: #7AAF8A;
+    --border: #C8E6D0;
+    --shadow: rgba(45,106,79,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans SC', sans-serif; background: var(--cream); color: var(--text-dark); min-height: 100vh; }
+
+  /* ── Login ── */
+  #login-screen {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
+  }
+  .login-box {
+    background: #fff;
+    border-radius: 20px;
+    padding: 48px 40px;
+    width: 360px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    text-align: center;
+  }
+  .login-icon { font-size: 48px; margin-bottom: 16px; }
+  .login-title { font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 700; color: var(--green-deep); margin-bottom: 8px; }
+  .login-sub { font-size: 13px; color: var(--text-light); margin-bottom: 32px; }
+  .login-box input {
+    width: 100%; padding: 13px 16px;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 15px; font-family: 'Noto Sans SC', sans-serif;
+    outline: none; margin-bottom: 14px;
+    text-align: center; letter-spacing: 4px;
+    transition: border-color 0.2s;
+  }
+  .login-box input:focus { border-color: var(--green-mid); }
+  .login-error { font-size: 12px; color: #e05252; margin-bottom: 12px; min-height: 16px; }
+  #app { display: none; }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 60%, var(--green-light) 100%);
+    padding: 28px 40px 24px;
+    position: relative; overflow: hidden;
+  }
+  header::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+  }
+  .header-inner { max-width: 860px; margin: 0 auto; position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.18); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  header h1 { font-family: 'Noto Serif SC', serif; font-size: 20px; color: #fff; font-weight: 700; letter-spacing: 1px; }
+  header p { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 3px; font-weight: 300; }
+  .logout-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 7px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: 'Noto Sans SC', sans-serif; transition: background 0.2s; }
+  .logout-btn:hover { background: rgba(255,255,255,0.25); }
+
+  /* ── Nav ── */
+  .nav-wrap { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px var(--shadow); }
+  nav { max-width: 860px; margin: 0 auto; display: flex; overflow-x: auto; }
+  nav button { flex: 1; min-width: 110px; padding: 15px 8px; border: none; background: transparent; font-family: 'Noto Sans SC', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-light); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  nav button:hover { color: var(--green-mid); background: var(--green-frost); }
+  nav button.active { color: var(--green-deep); border-bottom-color: var(--green-mid); background: var(--green-frost); font-weight: 600; }
+
+  /* ── Main ── */
+  main { max-width: 860px; margin: 0 auto; padding: 28px 20px 60px; }
+  .panel { display: none; animation: fadeIn 0.3s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .panel-title { font-family: 'Noto Serif SC', serif; font-size: 20px; font-weight: 700; color: var(--green-deep); margin-bottom: 6px; }
+  .panel-subtitle { font-size: 13px; color: var(--text-light); margin-bottom: 24px; line-height: 1.6; }
+
+  /* ── Card ── */
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px; margin-bottom: 18px; box-shadow: 0 2px 12px var(--shadow); }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--green-deep); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .card-title .icon { width: 26px; height: 26px; background: var(--green-mist); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+
+  /* ── Form ── */
+  label { display: block; font-size: 12px; font-weight: 500; color: var(--text-mid); margin-bottom: 5px; }
+  input[type="text"], select, textarea { width: 100%; padding: 10px 13px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'Noto Sans SC', sans-serif; font-size: 13px; color: var(--text-dark); background: var(--green-frost); outline: none; transition: border-color 0.2s, box-shadow 0.2s; margin-bottom: 13px; }
+  input:focus, select:focus, textarea:focus { border-color: var(--green-mid); box-shadow: 0 0 0 3px rgba(64,145,108,0.1); background: #fff; }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.7; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width:560px) { .form-row { grid-template-columns: 1fr; } }
+
+  /* ── Buttons ── */
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 11px 22px; border-radius: 10px; border: none; font-family: 'Noto Sans SC', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: linear-gradient(135deg, var(--green-deep), var(--green-mid)); color: #fff; box-shadow: 0 4px 14px rgba(45,106,79,0.28); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(45,106,79,0.38); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-secondary { background: var(--green-mist); color: var(--green-deep); border: 1.5px solid var(--green-pale); }
+  .btn-secondary:hover { background: var(--green-pale); }
+  .btn-copy { background: var(--green-frost); color: var(--green-deep); border: 1.5px solid var(--border); padding: 7px 14px; font-size: 12px; }
+  .btn-copy:hover { background: var(--green-mist); }
+  .btn-login { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--green-deep), var(--green-mid)); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; font-family: 'Noto Sans SC', sans-serif; cursor: pointer; transition: all 0.2s; }
+  .btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(45,106,79,0.4); }
+
+  /* ── Output ── */
+  .output-box { background: var(--green-frost); border: 1.5px solid var(--border); border-radius: 12px; padding: 18px; font-size: 13px; line-height: 1.9; color: var(--text-dark); white-space: pre-wrap; min-height: 80px; }
+  .output-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .output-label { font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── Loading ── */
+  .loading { display: flex; align-items: center; gap: 10px; color: var(--text-light); font-size: 13px; padding: 20px 0; }
+  .spinner { width: 18px; height: 18px; border: 2px solid var(--green-pale); border-top-color: var(--green-mid); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Topic List ── */
+  .topic-list { display: flex; flex-direction: column; gap: 10px; }
+  .topic-item { background: #fff; border: 1.5px solid var(--border); border-radius: 12px; padding: 15px 16px; cursor: pointer; transition: all 0.2s; position: relative; }
+  .topic-item:hover { border-color: var(--green-mid); box-shadow: 0 4px 14px var(--shadow); }
+  .topic-item.selected { border-color: var(--green-mid); background: var(--green-frost); }
+  .topic-num { display: inline-block; background: var(--green-deep); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-bottom: 7px; }
+  .topic-title { font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
+  .topic-angle { font-size: 12px; color: var(--text-light); line-height: 1.6; }
+  .topic-check { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; opacity: 0.15; }
+  .topic-item.selected .topic-check { opacity: 1; }
+
+  /* ── IP Quiz ── */
+  .ip-panel-header { margin-bottom: 24px; }
+  .ip-step-badge { display: inline-block; background: var(--green-mist); color: var(--green-mid); font-size: 11px; font-weight: 700; padding: 3px 12px; border-radius: 20px; margin-bottom: 10px; letter-spacing: 0.5px; }
+  .quiz-step { display: none; }
+  .quiz-step.active { display: block; animation: fadeIn 0.3s ease; }
+  .quiz-q { font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 700; color: var(--green-deep); margin-bottom: 6px; line-height: 1.5; }
+  .quiz-hint { font-size: 12px; color: var(--text-light); margin-bottom: 16px; }
+  .quiz-options { display: flex; flex-direction: column; gap: 9px; margin-bottom: 22px; }
+  .quiz-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 22px; }
+  @media(max-width:480px) { .quiz-options-grid { grid-template-columns: 1fr; } }
+  .quiz-option {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 13px 16px; border: 1.5px solid var(--border);
+    border-radius: 12px; cursor: pointer; font-size: 13px;
+    color: var(--text-mid); transition: all 0.2s; background: #fff;
+  }
+  .quiz-option:hover { border-color: var(--green-mid); background: var(--green-frost); transform: translateY(-1px); box-shadow: 0 3px 10px var(--shadow); }
+  .quiz-option.selected { border-color: var(--green-mid); background: var(--green-frost); color: var(--green-deep); }
+  .quiz-option .opt-check {
+    width: 18px; height: 18px; min-width: 18px;
+    border: 2px solid var(--border); border-radius: 4px;
+    margin-top: 1px; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .quiz-option.selected .opt-check { background: var(--green-mid); border-color: var(--green-mid); }
+  .quiz-option.selected .opt-check::after {
+    content: ''; width: 10px; height: 8px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8'%3E%3Cpath d='M1 4l2.5 3L9 1' stroke='white' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-size: contain; background-repeat: no-repeat;
+  }
+  .quiz-option.single .opt-check { border-radius: 50%; }
+  .quiz-option.single.selected .opt-check::after {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #fff; background-image: none;
+  }
+  .opt-body { flex: 1; }
+  .opt-main { font-size: 13px; font-weight: 500; line-height: 1.5; }
+  .opt-sub { font-size: 11px; color: var(--text-light); margin-top: 2px; line-height: 1.5; }
+  .opt-emoji { font-size: 16px; min-width: 20px; margin-top: 1px; }
+  .progress-bar { height: 5px; background: var(--green-mist); border-radius: 3px; margin-bottom: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--green-deep), var(--green-light)); border-radius: 3px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
+  .step-dots { display: flex; gap: 5px; margin-bottom: 24px; }
+  .step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-pale); transition: all 0.3s; }
+  .step-dot.done { background: var(--green-mid); }
+  .step-dot.active { background: var(--green-deep); width: 18px; border-radius: 3px; }
+
+  /* ── Data Grid ── */
+  .data-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px; }
+  @media(max-width:500px) { .data-grid { grid-template-columns: 1fr; } }
+  .data-item label { font-size: 11px; margin-bottom: 4px; }
+  .data-item input { margin-bottom: 0; }
+  .divider { height: 1px; background: var(--border); margin: 18px 0; }
+
+  /* ── Tip ── */
+  .tip { background: var(--green-mist); border-left: 3px solid var(--green-mid); border-radius: 0 8px 8px 0; padding: 11px 14px; font-size: 12px; color: var(--text-mid); line-height: 1.7; margin-bottom: 14px; }
+
+  /* ── Toast ── */
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--green-deep); color: #fff; padding: 10px 24px; border-radius: 30px; font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- 登录页 -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-icon">🌿</div>
+    <div class="login-title">营养师自媒体助手</div>
+    <div class="login-sub">每日热点 · 口播文案 · 数据复盘 · IP梳理</div>
+    <input type="password" id="access-input" placeholder="请输入访问码" maxlength="20">
+    <div class="login-error" id="login-error"></div>
+    <button class="btn-login" onclick="doLogin()">进入工具</button>
+  </div>
+</div>
+
+<!-- 主应用 -->
+<div id="app">
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">🌿</div>
+        <div>
+          <h1>营养师自媒体助手</h1>
+          <p>每日热点 · 口播文案 · 数据复盘 · IP梳理</p>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">退出</button>
+    </div>
+  </header>
+
+  <div class="nav-wrap">
+    <nav>
+      <button class="active" onclick="switchTab('hotspot',this)">🔥 今日热点</button>
+      <button onclick="switchTab('script',this)">✍️ 口播文案</button>
+      <button onclick="switchTab('data',this)">📊 数据复盘</button>
+      <button onclick="switchTab('ip',this)">🎯 IP梳理</button>
+    </nav>
+  </div>
+
+  <main>
+    <!-- 今日热点 -->
+    <div id="panel-hotspot" class="panel active">
+      <div class="panel-title">今日健康热点</div>
+      <div class="panel-subtitle">搜索最新健康营养热点，快速选题，告别"今天拍什么"的烦恼。</div>
+      <div class="card">
+        <div class="card-title"><div class="icon">🎯</div>选择受众与方向</div>
+        <div class="form-row">
+          <div>
+            <label>目标受众</label>
+            <select id="audience">
+              <option>中年女性（35-55岁）</option>
+              <option>年轻女性（20-35岁）</option>
+              <option>中老年人群</option>
+              <option>健身人群</option>
+              <option>宝妈群体</option>
+              <option>全年龄段通用</option>
+            </select>
+          </div>
+          <div>
+            <label>内容方向</label>
+            <select id="direction">
+              <option>健康营养（通用）</option>
+              <option>体重管理</option>
+              <option>抗衰老</option>
+              <option>肠道健康</option>
+              <option>补剂科普</option>
+              <option>食品安全</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="getHotspot()" id="btn-hotspot">🔍 搜索今日热点</button>
+      </div>
+      <div id="hotspot-loading" style="display:none"><div class="loading"><div class="spinner"></div>正在搜索今日健康热点...</div></div>
+      <div id="hotspot-result" style="display:none">
+        <div class="card-title" style="margin-bottom:12px"><div class="icon">📰</div>今日热点（点击选择选题）</div>
+        <div class="topic-list" id="topic-list"></div>
+        <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="goToScript()" id="btn-to-script" style="display:none">✍️ 生成这条的口播文案</button>
+          <button class="btn btn-secondary" onclick="getHotspot()">🔄 重新搜索</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 口播文案 -->
+    <div id="panel-script" class="panel">
+      <div class="panel-title">口播文案生成</div>
+      <div class="panel-subtitle">一键生成完整口播文案，含封面标题、发布描述和违禁词检查，拍完直接发。</div>
+      <div class="card">
+        <div class="card-title"><div class="icon">📝</div>文案配置</div>
+        <label>选题 / 主题</label>
+        <textarea id="script-topic" placeholder="例如：膳食纤维怎么补？营养师教你一日三餐的补法&#10;或粘贴今日热点标题..." rows="3"></textarea>
+        <div class="form-row">
+          <div>
+            <label>目标受众</label>
+            <select id="script-audience">
+              <option>中年女性（35-55岁）</option>
+              <option>年轻女性（20-35岁）</option>
+              <option>中老年人群</option>
+              <option>健身人群</option>
+              <option>宝妈群体</option>
+            </select>
+          </div>
+          <div>
+            <label>视频时长</label>
+            <select id="script-duration">
+              <option>60秒以内</option>
+              <option selected>80秒左右</option>
+              <option>90秒左右</option>
+            </select>
+          </div>
+        </div>
+        <label>博主人设（选填）</label>
+        <input type="text" id="script-persona" placeholder="例如：98年注册营养师，大外企健康顾问，亲身测试过补剂">
+        <label>补充要求（选填）</label>
+        <input type="text" id="script-extra" placeholder="例如：结合抗衰知识 / 不排斥补剂 / 加二次留人钩">
+        <button class="btn btn-primary" onclick="generateScript()" id="btn-script">✨ 生成口播文案</button>
+      </div>
+      <div id="script-loading" style="display:none"><div class="loading"><div class="spinner"></div>正在生成口播文案，含违禁词检查...</div></div>
+      <div id="script-result" style="display:none">
+        <div class="card">
+          <div class="output-header"><div class="output-label">🎬 完整口播文案</div><button class="btn btn-copy" onclick="copyEl('script-output')">📋 复制</button></div>
+          <div class="output-box" id="script-output"></div>
+        </div>
+        <div class="card">
+          <div class="output-header"><div class="output-label">📱 封面标题 + 发布描述</div><button class="btn btn-copy" onclick="copyEl('publish-output')">📋 复制</button></div>
+          <div class="output-box" id="publish-output"></div>
+        </div>
+        <div class="card">
+          <div class="output-header"><div class="output-label">🔍 违禁词检查</div><button class="btn btn-copy" onclick="copyEl('check-output')">📋 复制</button></div>
+          <div class="output-box" id="check-output"></div>
+        </div>
+        <button class="btn btn-secondary" onclick="generateScript()">🔄 重新生成</button>
+      </div>
+    </div>
+
+    <!-- 数据复盘 -->
+    <div id="panel-data" class="panel">
+      <div class="panel-title">数据复盘 & 优化建议</div>
+      <div class="panel-subtitle">输入视频数据，获取专业分析和下一条视频的具体优化方向。</div>
+      <div class="card">
+        <div class="card-title"><div class="icon">📊</div>输入视频数据</div>
+        <div class="tip">💡 可同时输入多条视频进行对比分析，找出规律。</div>
+        <div id="data-entries">
+          <div class="data-entry">
+            <div style="font-size:13px;font-weight:600;color:var(--green-mid);margin-bottom:10px">视频 1</div>
+            <label>视频主题</label>
+            <input type="text" class="entry-topic" placeholder="例如：膳食纤维怎么补">
+            <div class="data-grid">
+              <div class="data-item"><label>播放量</label><input type="text" class="entry-views" placeholder="1045"></div>
+              <div class="data-item"><label>完播率</label><input type="text" class="entry-completion" placeholder="16.46%"></div>
+              <div class="data-item"><label>3s以上播放率</label><input type="text" class="entry-3s" placeholder="67.23%"></div>
+              <div class="data-item"><label>平均播放时长</label><input type="text" class="entry-avgtime" placeholder="25.93秒"></div>
+              <div class="data-item"><label>点赞数</label><input type="text" class="entry-likes" placeholder="32"></div>
+              <div class="data-item"><label>新增关注</label><input type="text" class="entry-follows" placeholder="4"></div>
+            </div>
+            <div class="divider"></div>
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="addEntry()" style="margin-bottom:14px">➕ 添加一条视频</button>
+        <label>补充说明（选填）</label>
+        <textarea id="data-extra" placeholder="例如：这条用了留人钩 / 开头改成了反常识钩子..." rows="2"></textarea>
+        <button class="btn btn-primary" onclick="analyzeData()" id="btn-data">📊 开始分析</button>
+      </div>
+      <div id="data-loading" style="display:none"><div class="loading"><div class="spinner"></div>正在分析数据，生成优化建议...</div></div>
+      <div id="data-result" style="display:none">
+        <div class="card">
+          <div class="output-header"><div class="output-label">📈 数据分析报告</div><button class="btn btn-copy" onclick="copyEl('data-output')">📋 复制</button></div>
+          <div class="output-box" id="data-output"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IP梳理（升级版 8步）-->
+    <div id="panel-ip" class="panel">
+      <div class="panel-title">IP 定位深度梳理</div>
+      <div class="panel-subtitle">回答 8 个问题，生成专属IP定位报告：人设、内容方向、主页简介、前3个月计划。</div>
+
+      <div id="ip-quiz-wrap">
+        <div class="card">
+          <div class="progress-bar"><div class="progress-fill" id="ip-progress" style="width:0%"></div></div>
+          <div class="step-dots" id="ip-dots"></div>
+
+          <!-- Step 1 -->
+          <div class="quiz-step active" id="ip-step-1">
+            <div class="ip-step-badge">STEP 01 / 08</div>
+            <div class="quiz-q">你的专业背景是什么？</div>
+            <div class="quiz-hint">可多选</div>
+            <div class="quiz-options" id="ip-opts-1">
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">🎓</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">注册营养师（RD）</div><div class="opt-sub">有官方认证资质，专业权威</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">📚</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">营养学相关专业在读/毕业</div><div class="opt-sub">有系统的营养学知识背景</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">🏥</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">医生 / 护士 / 医疗从业者</div><div class="opt-sub">有临床或医疗背景</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">💪</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">健身教练 / 运动营养</div><div class="opt-sub">专注运动表现和体能</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">🌿</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">健康产品从业者</div><div class="opt-sub">补剂、保健品或功能性食品行业</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">❤️</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">健康爱好者 / 自学成才</div><div class="opt-sub">通过自学和实践积累丰富知识</div></div></div>
+            </div>
+            <div class="nav-btns"><button class="btn btn-primary" onclick="ipNext(1)">下一步 →</button></div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="quiz-step" id="ip-step-2">
+            <div class="ip-step-badge">STEP 02 / 08</div>
+            <div class="quiz-q">你的年龄和当前人生阶段？</div>
+            <div class="quiz-hint">单选，影响内容风格和受众共鸣</div>
+            <div class="quiz-options" id="ip-opts-2">
+              <div class="quiz-option single" onclick="ipSingle(this,'ip-opts-2')"><div class="opt-emoji">🌱</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">00后（25岁以下）</div><div class="opt-sub">在校或刚入职，单身为主</div></div></div>
+              <div class="quiz-option single" onclick="ipSingle(this,'ip-opts-2')"><div class="opt-emoji">✨</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">95-99年（25-30岁）</div><div class="opt-sub">职场新人，单身/恋爱/刚结婚</div></div></div>
+              <div class="quiz-option single" onclick="ipSingle(this,'ip-opts-2')"><div class="opt-emoji">💍</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">90-94年（30-35岁）</div><div class="opt-sub">事业上升期，已婚或有小孩</div></div></div>
+              <div class="quiz-option single" onclick="ipSingle(this,'ip-opts-2')"><div class="opt-emoji">👨‍👩‍👧</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">85-89年（35-40岁）</div><div class="opt-sub">中坚力量，有孩子，开始关注健康</div></div></div>
+              <div class="quiz-option single" onclick="ipSingle(this,'ip-opts-2')"><div class="opt-emoji">🌟</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">80-84年（40-45岁）</div><div class="opt-sub">中年期，健康意识强，家庭责任重</div></div></div>
+              <div class="quiz-option single" onclick="ipSingle(this,'ip-opts-2')"><div class="opt-emoji">🏆</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">80年以前（45岁以上）</div><div class="opt-sub">经验丰富，资深专家感</div></div></div>
+            </div>
+            <div class="nav-btns"><button class="btn btn-secondary" onclick="ipPrev(2)">← 上一步</button><button class="btn btn-primary" onclick="ipNext(2)">下一步 →</button></div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="quiz-step" id="ip-step-3">
+            <div class="ip-step-badge">STEP 03 / 08</div>
+            <div class="quiz-q">你的性别和外在特征？</div>
+            <div class="quiz-hint">多选，这些会成为你的视觉差异化标签</div>
+            <div class="quiz-options-grid" id="ip-opts-3">
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">👨 男性</div><div class="opt-sub">健康赛道稀缺</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">👩 女性</div><div class="opt-sub">受众代入感强</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">💪 体型好/有肌肉</div><div class="opt-sub">说服力强</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">😊 亲切邻家感</div><div class="opt-sub">亲和力高</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">🎯 精英白领感</div><div class="opt-sub">专业可信度高</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">🌿 清新自然风</div><div class="opt-sub">健康生活感强</div></div></div>
+            </div>
+            <div class="nav-btns"><button class="btn btn-secondary" onclick="ipPrev(3)">← 上一步</button><button class="btn btn-primary" onclick="ipNext(3)">下一步 →</button></div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="quiz-step" id="ip-step-4">
+            <div class="ip-step-badge">STEP 04 / 08</div>
+            <div class="quiz-q">你有哪些真实经历或差异化背景？</div>
+            <div class="quiz-hint">多选，真实经历是最强的信任背书</div>
+            <div class="quiz-options" id="ip-opts-4">
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">🔬</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">亲身测试过补剂 / 保健品</div><div class="opt-sub">有第一手使用数据和感受</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">💊</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">经历过健康问题后改变</div><div class="opt-sub">有从生病到健康的真实转变故事</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">🏢</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">大公司 / 外企从业背景</div><div class="opt-sub">增加专业可信度</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">⚖️</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">有成功减重 / 增肌经历</div><div class="opt-sub">结果说话，说服力极强</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">🍳</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">长期自己备餐 / 控制饮食</div><div class="opt-sub">有实操经验，内容接地气</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">👨‍👩‍👧‍👦</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">帮助家人改善健康</div><div class="opt-sub">有陪伴家人健康转变的故事</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">🏃</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">有固定运动习惯</div><div class="opt-sub">身体力行的健康生活践行者</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">🌍</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">海外学习 / 生活经历</div><div class="opt-sub">有国际视野和不同饮食文化背景</div></div></div>
+            </div>
+            <div class="nav-btns"><button class="btn btn-secondary" onclick="ipPrev(4)">← 上一步</button><button class="btn btn-primary" onclick="ipNext(4)">下一步 →</button></div>
+          </div>
+
+          <!-- Step 5 -->
+          <div class="quiz-step" id="ip-step-5">
+            <div class="ip-step-badge">STEP 05 / 08</div>
+            <div class="quiz-q">最擅长或最感兴趣的内容方向？</div>
+            <div class="quiz-hint">多选，选2-4个最核心的</div>
+            <div class="quiz-options-grid" id="ip-opts-5">
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">🥗 日常饮食搭配</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">💊 补剂科普测评</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">⚖️ 体重管理减脂</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">🧬 抗衰老营养</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">🦠 肠道健康</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">😴 睡眠饮食</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">🏷️ 食品标签解读</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">👶 备孕/孕期营养</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">👵 中老年健康</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-check"></div><div class="opt-body"><div class="opt-main">🏋️ 运动营养</div></div></div>
+            </div>
+            <div class="nav-btns"><button class="btn btn-secondary" onclick="ipPrev(5)">← 上一步</button><button class="btn btn-primary" onclick="ipNext(5)">下一步 →</button></div>
+          </div>
+
+          <!-- Step 6 -->
+          <div class="quiz-step" id="ip-step-6">
+            <div class="ip-step-badge">STEP 06 / 08</div>
+            <div class="quiz-q">做自媒体的核心目标？</div>
+            <div class="quiz-hint">多选，目标影响内容策略和变现路径</div>
+            <div class="quiz-options" id="ip-opts-6">
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">📈</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">涨粉，建立个人影响力</div><div class="opt-sub">先做大，再变现</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">🛒</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">为业务 / 产品引流转化</div><div class="opt-sub">内容是销售前端，服务私域变现</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">💰</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">做个人品牌，长期变现</div><div class="opt-sub">课程、咨询、合作等多元变现</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">🌍</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">传播营养知识，做社会贡献</div><div class="opt-sub">使命驱动，让更多人吃得更健康</div></div></div>
+              <div class="quiz-option" onclick="ipToggle(this)"><div class="opt-emoji">🏅</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">建立行业内的专业口碑</div><div class="opt-sub">让同行和潜在客户认可专业度</div></div></div>
+            </div>
+            <div class="nav-btns"><button class="btn btn-secondary" onclick="ipPrev(6)">← 上一步</button><button class="btn btn-primary" onclick="ipNext(6)">下一步 →</button></div>
+          </div>
+
+          <!-- Step 7 -->
+          <div class="quiz-step" id="ip-step-7">
+            <div class="ip-step-badge">STEP 07 / 08</div>
+            <div class="quiz-q">你希望呈现的内容风格？</div>
+            <div class="quiz-hint">单选，选最接近你自然状态的</div>
+            <div class="quiz-options" id="ip-opts-7">
+              <div class="quiz-option single" onclick="ipSingle(this,'ip-opts-7')"><div class="opt-emoji">🔬</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">专业权威型</div><div class="opt-sub">数据说话，引用研究，建立专家形象</div></div></div>
+              <div class="quiz-option single" onclick="ipSingle(this,'ip-opts-7')"><div class="opt-emoji">☕</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">生活接地气型</div><div class="opt-sub">像朋友聊天，亲切易懂，生活化场景</div></div></div>
+              <div class="quiz-option single" onclick="ipSingle(this,'ip-opts-7')"><div class="opt-emoji">🎯</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">干货实用型</div><div class="opt-sub">直接给结论，步骤清晰，可操作性强</div></div></div>
+              <div class="quiz-option single" onclick="ipSingle(this,'ip-opts-7')"><div class="opt-emoji">📖</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">故事叙述型</div><div class="opt-sub">用真实故事带出知识点</div></div></div>
+              <div class="quiz-option single" onclick="ipSingle(this,'ip-opts-7')"><div class="opt-emoji">🔥</div><div class="opt-check"></div><div class="opt-body"><div class="opt-main">观点犀利型</div><div class="opt-sub">敢打破认知，说别人不敢说的真相</div></div></div>
+            </div>
+            <div class="nav-btns"><button class="btn btn-secondary" onclick="ipPrev(7)">← 上一步</button><button class="btn btn-primary" onclick="ipNext(7)">下一步 →</button></div>
+          </div>
+
+          <!-- Step 8 -->
+          <div class="quiz-step" id="ip-step-8">
+            <div class="ip-step-badge">STEP 08 / 08</div>
+            <div class="quiz-q">最后，补充一些重要信息</div>
+            <div class="quiz-hint">越具体越好，这是生成差异化定位的关键原材料</div>
+            <div class="tip">💡 可以写：你的健康经历、你帮助过哪类人、你的工作背景、你和别人有什么不同……</div>
+            <label>你的名字 / 昵称（选填）</label>
+            <input type="text" id="ip-name" placeholder="例如：李想、营养师小王">
+            <label>主要面向的受众群体</label>
+            <input type="text" id="ip-audience" placeholder="例如：中年女性、备孕妈妈、健身人群">
+            <label>你觉得自己最大的差异化是什么？</label>
+            <textarea id="ip-diff" placeholder="例如：我是98年男营养师，在安利做大健康业务，亲自测试过多种补剂，有从慢性胃炎到完全康复的经历…" rows="3"></textarea>
+            <label>其他补充（选填）</label>
+            <textarea id="ip-extra" placeholder="例如：我想把安利业务和营养科普结合、我希望建立科普类的专业形象…" rows="2"></textarea>
+            <div class="nav-btns">
+              <button class="btn btn-secondary" onclick="ipPrev(8)">← 上一步</button>
+              <button class="btn btn-primary" onclick="generateIP()" id="btn-ip">🎯 生成我的IP定位报告</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ip-loading" style="display:none"><div class="loading"><div class="spinner"></div>正在深度分析你的IP定位，请稍候...</div></div>
+      <div id="ip-result" style="display:none">
+        <div class="card">
+          <div class="output-header"><div class="output-label">🎯 IP定位报告</div><button class="btn btn-copy" onclick="copyEl('ip-output')">📋 复制</button></div>
+          <div class="output-box" id="ip-output"></div>
+        </div>
+        <button class="btn btn-secondary" onclick="resetIP()" style="margin-top:4px">🔄 重新梳理</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast">✅ 已复制到剪贴板</div>
+
+<script>
+  // ── 访问码登录 ──
+  let accessCode = '';
+
+  function doLogin() {
+    const input = document.getElementById('access-input').value.trim();
+    if (!input) { document.getElementById('login-error').textContent = '请输入访问码'; return; }
+    // 阿里云版本：先存入访问码，通过一次真实请求验证
+    accessCode = input;
+    fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-access-code': accessCode },
+      body: JSON.stringify({ messages: [{ role: 'user', content: 'hi' }], system: '' })
+    }).then(r => {
+      if (r.status === 401) {
+        document.getElementById('login-error').textContent = '访问码错误，请联系管理员';
+        accessCode = '';
+      } else {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+      }
+    }).catch(() => {
+      document.getElementById('login-error').textContent = '网络连接失败，请检查API地址配置';
+      accessCode = '';
+    });
+  }
+
+  document.getElementById('access-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+  function doLogout() {
+    accessCode = '';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('access-input').value = '';
+  }
+
+  // ── Tab ──
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── Copy ──
+  function copyEl(id) {
+    navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => {
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    });
+  }
+
+  // ── API 地址配置 ──
+  // 部署后将下面的地址替换为你的阿里云函数计算 HTTP 触发器地址
+  // 格式类似：https://xxxxxxxx.cn-hangzhou.fcapp.run/api/chat
+  const API_ENDPOINT = 'https://nutrition-api-xfwnyqpxkc.cn-hangzhou.fcapp.run/api/chat';
+
+  // ── API Call ──
+  async function callAPI(messages, system) {
+    const res = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-access-code': accessCode },
+      body: JSON.stringify({ messages, system })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || '请求失败');
+    }
+    const data = await res.json();
+    return data.content?.map(c => c.text || '').join('') || '';
+  }
+
+  function setLoading(loadingId, resultId, btnId, show) {
+    document.getElementById(loadingId).style.display = show ? 'block' : 'none';
+    if (!show) document.getElementById(resultId).style.display = 'block';
+    if (btnId) document.getElementById(btnId).disabled = show;
+  }
+
+  // ══ 今日热点 ══
+  let selectedTopic = null;
+
+  async function getHotspot() {
+    const audience = document.getElementById('audience').value;
+    const direction = document.getElementById('direction').value;
+    const today = new Date().toLocaleDateString('zh-CN');
+    document.getElementById('hotspot-loading').style.display = 'block';
+    document.getElementById('hotspot-result').style.display = 'none';
+    document.getElementById('btn-hotspot').disabled = true;
+    selectedTopic = null;
+    document.getElementById('btn-to-script').style.display = 'none';
+
+    try {
+      const text = await callAPI([{
+        role: 'user',
+        content: `今天是${today}。请整理今天最新的5条健康营养热点，方向：「${direction}」，受众：「${audience}」。
+
+每条按格式输出：
+【热点N】标题
+新闻简述（1-2句）
+👉 选题角度：具体视频选题方向
+
+内容真实、时效性强，适合健康科普短视频。`
+      }], '你是资深健康科普内容运营，精通营养学，每天追踪最新健康新闻热点。请用中文回复，内容真实准确。');
+      renderTopics(text);
+    } catch(e) {
+      renderTopics('获取失败：' + e.message);
+    } finally {
+      document.getElementById('hotspot-loading').style.display = 'none';
+      document.getElementById('hotspot-result').style.display = 'block';
+      document.getElementById('btn-hotspot').disabled = false;
+    }
+  }
+
+  function renderTopics(text) {
+    const list = document.getElementById('topic-list');
+    list.innerHTML = '';
+    const blocks = text.split(/【热点\d+】/).filter(b => b.trim());
+    if (!blocks.length) { list.innerHTML = `<div class="output-box">${text}</div>`; return; }
+    blocks.forEach((block, i) => {
+      const lines = block.trim().split('\n').filter(l => l.trim());
+      const title = lines[0] || '';
+      const rest = lines.slice(1).join('\n');
+      const div = document.createElement('div');
+      div.className = 'topic-item';
+      div.innerHTML = `<div class="topic-num">热点 ${i+1}</div><div class="topic-title">${title}</div><div class="topic-angle">${rest}</div><div class="topic-check">✅</div>`;
+      div.onclick = () => {
+        document.querySelectorAll('.topic-item').forEach(t => t.classList.remove('selected'));
+        div.classList.add('selected');
+        selectedTopic = title + '\n' + rest;
+        document.getElementById('btn-to-script').style.display = 'inline-flex';
+      };
+      list.appendChild(div);
+    });
+  }
+
+  function goToScript() {
+    if (!selectedTopic) return;
+    document.getElementById('script-topic').value = selectedTopic;
+    document.getElementById('script-audience').value = document.getElementById('audience').value;
+    document.querySelectorAll('nav button')[1].click();
+  }
+
+  // ══ 口播文案 ══
+  async function generateScript() {
+    const topic = document.getElementById('script-topic').value.trim();
+    if (!topic) { alert('请先输入选题！'); return; }
+    setLoading('script-loading', 'script-result', 'btn-script', true);
+    document.getElementById('script-result').style.display = 'none';
+
+    try {
+      const text = await callAPI([{
+        role: 'user',
+        content: `写一篇视频号口播文案：
+选题：${topic}
+受众：${document.getElementById('script-audience').value}
+时长：${document.getElementById('script-duration').value}
+人设：${document.getElementById('script-persona').value || '注册营养师'}
+补充：${document.getElementById('script-extra').value || '无'}
+
+结构：
+1. 开头（0-8s）强钩子
+2. 转折引出主题
+3. 留人钩一（18-23s）
+4. 干货（2-3个建议+生活化例子）
+5. 留人钩二（中后段）
+6. 结尾引导关注/收藏
+
+要求：口语化、标注时间轴、符合营养学。
+
+输出文案后用 ===PUBLISH=== 分隔输出：
+📱 封面标题（主推+备选）
+✍️ 发布描述+话题标签
+
+再用 ===CHECK=== 分隔输出：
+🔍 违禁词检查表格`
+      }], '你是资深短视频运营专家，精通营养学。文案风格：通俗易懂、接地气、有钩子。请用中文回复。');
+
+      const s1 = text.indexOf('===PUBLISH===');
+      const s2 = text.indexOf('===CHECK===');
+      document.getElementById('script-output').innerText = s1 > -1 ? text.slice(0, s1).trim() : text;
+      document.getElementById('publish-output').innerText = s1 > -1 ? (s2 > -1 ? text.slice(s1+13, s2).trim() : text.slice(s1+13).trim()) : '';
+      document.getElementById('check-output').innerText = s2 > -1 ? text.slice(s2+11).trim() : '';
+    } catch(e) {
+      document.getElementById('script-output').innerText = '生成失败：' + e.message;
+      document.getElementById('publish-output').innerText = '';
+      document.getElementById('check-output').innerText = '';
+    } finally {
+      setLoading('script-loading', 'script-result', 'btn-script', false);
+    }
+  }
+
+  // ══ 数据复盘 ══
+  let entryCount = 1;
+  function addEntry() {
+    entryCount++;
+    const div = document.createElement('div');
+    div.className = 'data-entry';
+    div.innerHTML = `
+      <div style="font-size:13px;font-weight:600;color:var(--green-mid);margin-bottom:10px">视频 ${entryCount}</div>
+      <label>视频主题</label><input type="text" class="entry-topic" placeholder="例如：抗炎饮食清单">
+      <div class="data-grid">
+        <div class="data-item"><label>播放量</label><input type="text" class="entry-views" placeholder="1379"></div>
+        <div class="data-item"><label>完播率</label><input type="text" class="entry-completion" placeholder="19.22%"></div>
+        <div class="data-item"><label>3s以上播放率</label><input type="text" class="entry-3s" placeholder="72.91%"></div>
+        <div class="data-item"><label>平均播放时长</label><input type="text" class="entry-avgtime" placeholder="29.13秒"></div>
+        <div class="data-item"><label>点赞数</label><input type="text" class="entry-likes" placeholder="27"></div>
+        <div class="data-item"><label>新增关注</label><input type="text" class="entry-follows" placeholder="4"></div>
+      </div><div class="divider"></div>`;
+    document.getElementById('data-entries').appendChild(div);
+  }
+
+  async function analyzeData() {
+    let dataText = '';
+    document.querySelectorAll('.data-entry').forEach((entry, i) => {
+      dataText += `视频${i+1}：${entry.querySelector('.entry-topic')?.value || '未填写'}\n`;
+      dataText += `播放量：${entry.querySelector('.entry-views')?.value || '-'} | 完播率：${entry.querySelector('.entry-completion')?.value || '-'} | 3s播放率：${entry.querySelector('.entry-3s')?.value || '-'} | 平均时长：${entry.querySelector('.entry-avgtime')?.value || '-'} | 点赞：${entry.querySelector('.entry-likes')?.value || '-'} | 新增关注：${entry.querySelector('.entry-follows')?.value || '-'}\n\n`;
+    });
+    setLoading('data-loading', 'data-result', 'btn-data', true);
+    document.getElementById('data-result').style.display = 'none';
+    try {
+      const text = await callAPI([{
+        role: 'user',
+        content: `分析以下视频号数据并给出优化建议：\n\n${dataText}\n补充：${document.getElementById('data-extra').value || '无'}\n\n请输出：\n1. 📊 数据对比（多条时）\n2. 🔍 核心问题诊断\n3. ✅ 做得好的地方\n4. 💡 下一条具体优化建议（3条以上，非常具体可操作）\n5. 🎯 完播率提升重点\n\n参考基准：3s播放率60%+良好，完播率25%+良好。`
+      }], '你是资深短视频数据分析师，专注健康营养赛道。分析深入、建议具体可操作。请用中文回复。');
+      document.getElementById('data-output').innerText = text;
+    } catch(e) {
+      document.getElementById('data-output').innerText = '分析失败：' + e.message;
+    } finally {
+      setLoading('data-loading', 'data-result', 'btn-data', false);
+    }
+  }
+
+  // ══ IP梳理（升级版 8步）══
+  const IP_TOTAL = 8;
+  let ipStep = 1;
+
+  // 初始化步骤点
+  (function() {
+    const dotsEl = document.getElementById('ip-dots');
+    for (let i = 1; i <= IP_TOTAL; i++) {
+      const d = document.createElement('div');
+      d.className = 'step-dot' + (i === 1 ? ' active' : '');
+      d.id = 'ip-dot-' + i;
+      dotsEl.appendChild(d);
+    }
+  })();
+
+  function ipUpdateProgress() {
+    const pct = Math.round((ipStep - 1) / IP_TOTAL * 100);
+    document.getElementById('ip-progress').style.width = pct + '%';
+    for (let i = 1; i <= IP_TOTAL; i++) {
+      const d = document.getElementById('ip-dot-' + i);
+      if (d) d.className = 'step-dot' + (i < ipStep ? ' done' : i === ipStep ? ' active' : '');
+    }
+  }
+
+  function ipToggle(el) { el.classList.toggle('selected'); }
+  function ipSingle(el, id) {
+    document.querySelectorAll('#' + id + ' .quiz-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  function ipGetSelected(id) {
+    return Array.from(document.querySelectorAll('#' + id + ' .quiz-option.selected'))
+      .map(o => o.querySelector('.opt-main')?.textContent?.trim() || '')
+      .join('、');
+  }
+
+  function ipNext(from) {
+    document.getElementById('ip-step-' + from).classList.remove('active');
+    ipStep = from + 1;
+    document.getElementById('ip-step-' + ipStep).classList.add('active');
+    ipUpdateProgress();
+    document.getElementById('panel-ip').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function ipPrev(from) {
+    document.getElementById('ip-step-' + from).classList.remove('active');
+    ipStep = from - 1;
+    document.getElementById('ip-step-' + ipStep).classList.add('active');
+    ipUpdateProgress();
+    document.getElementById('panel-ip').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  async function generateIP() {
+    document.getElementById('ip-quiz-wrap').style.display = 'none';
+    document.getElementById('ip-loading').style.display = 'block';
+    document.getElementById('ip-result').style.display = 'none';
+    document.getElementById('btn-ip').disabled = true;
+
+    const profile = {
+      专业背景: ipGetSelected('ip-opts-1') || '未填写',
+      年龄阶段: ipGetSelected('ip-opts-2') || '未填写',
+      性别外形: ipGetSelected('ip-opts-3') || '未填写',
+      真实经历: ipGetSelected('ip-opts-4') || '未填写',
+      内容方向: ipGetSelected('ip-opts-5') || '未填写',
+      自媒体目标: ipGetSelected('ip-opts-6') || '未填写',
+      内容风格: ipGetSelected('ip-opts-7') || '未填写',
+      姓名昵称: document.getElementById('ip-name')?.value || '未填写',
+      目标受众: document.getElementById('ip-audience')?.value || '未填写',
+      最大差异化: document.getElementById('ip-diff')?.value || '未填写',
+      其他补充: document.getElementById('ip-extra')?.value || '无',
+    };
+
+    try {
+      const text = await callAPI([{
+        role: 'user',
+        content: `请帮我深度梳理以下自媒体博主的IP定位：
+
+${Object.entries(profile).map(([k,v]) => `${k}：${v}`).join('\n')}
+
+请输出以下内容，每部分用序号和标题分隔，内容详细具体：
+
+1. 🎯 一句话IP定位
+（简洁有力，让人一眼记住你是谁、能给谁提供什么价值）
+
+2. 💡 核心差异化分析
+（分析身上哪些组合真正稀缺，为什么粉丝会选择关注你而不是别人）
+
+3. 📱 内容策略建议
+主线内容：每天做什么，用来涨粉
+副线内容：偶尔做什么，增加人设真实感
+变现线内容：如何自然融入业务或产品
+
+4. 🗣️ 视频号主页简介
+给出3个版本（专业权威版、亲切接地气版、反差感版）
+
+5. 🎬 视频结尾自我介绍
+给出2个版本，每次视频结尾报名字时用
+
+6. 🚀 前3个月内容建议
+主打哪类内容、怎么建立人设、怎么积累第一批精准粉丝
+
+7. ⚠️ 需要注意的风险点
+这个IP定位可能踩的坑和需要注意的边界`
+      }], '你是资深自媒体IP策划顾问，专注健康营养赛道，服务过数百位营养师和健康博主。建议务实、有洞察力、有具体可操作细节。请用中文回复。');
+      document.getElementById('ip-output').innerText = text;
+    } catch(e) {
+      document.getElementById('ip-output').innerText = '生成失败：' + e.message;
+    } finally {
+      document.getElementById('ip-loading').style.display = 'none';
+      document.getElementById('ip-result').style.display = 'block';
+      document.getElementById('btn-ip').disabled = false;
+    }
+  }
+
+  function resetIP() {
+    ipStep = 1;
+    document.querySelectorAll('.quiz-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('ip-step-1').classList.add('active');
+    document.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+    ['ip-name','ip-audience','ip-diff','ip-extra'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('ip-result').style.display = 'none';
+    document.getElementById('ip-quiz-wrap').style.display = 'block';
+    ipUpdateProgress();
+  }
+
+  ipUpdateProgress();
+</script>
+</body>
+</html>
